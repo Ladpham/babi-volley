@@ -1,5 +1,5 @@
 // File: src/Admin.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL = "https://script.google.com/macros/s/AKfycbz1bnZTtzP2lu4MqzzdyAYeoaRgoPL9JHMXJX-ItGX2dl_HMBrIL5Lw7q77zozDvWlE_A/exec";
 
@@ -10,6 +10,18 @@ export default function Admin() {
   const [amount, setAmount] = useState("");
   const [teamId, setTeamId] = useState("");
   const [score, setScore] = useState("");
+  const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}?action=getPlayers`)
+      .then(res => res.json())
+      .then(setPlayers);
+
+    fetch(`${API_URL}?action=getTeams`)
+      .then(res => res.json())
+      .then(setTeams);
+  }, []);
 
   const handleShuffle = () => {
     fetch(API_URL, {
@@ -81,12 +93,17 @@ export default function Admin() {
 
       <hr className="my-6" />
 
-      <input
+      <select
         value={playerId}
         onChange={e => setPlayerId(e.target.value)}
         className="mb-2 w-full border p-2"
-        placeholder="Player ID"
-      />
+      >
+        <option value="">Select Player</option>
+        {players.map(p => (
+          <option key={p.player_id} value={p.player_id}>{p.name}</option>
+        ))}
+      </select>
+
       <input
         value={level}
         onChange={e => setLevel(e.target.value)}
@@ -109,12 +126,17 @@ export default function Admin() {
 
       <hr className="my-6" />
 
-      <input
+      <select
         value={teamId}
         onChange={e => setTeamId(e.target.value)}
         className="mb-2 w-full border p-2"
-        placeholder="Team ID"
-      />
+      >
+        <option value="">Select Team</option>
+        {teams.map(t => (
+          <option key={t.team_id} value={t.team_id}>{t.team_name}</option>
+        ))}
+      </select>
+
       <input
         value={score}
         onChange={e => setScore(e.target.value)}
