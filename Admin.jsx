@@ -7,12 +7,14 @@ export default function Admin() {
   const [gameId, setGameId] = useState("");
   const [playerId, setPlayerId] = useState("");
   const [level, setLevel] = useState("");
+  const [isPasser, setIsPasser] = useState(false);
   const [amount, setAmount] = useState("");
   const [teamId, setTeamId] = useState("");
   const [score, setScore] = useState("");
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [teamCompositions, setTeamCompositions] = useState([]);
+  const [editingTeam, setEditingTeam] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}?action=getPlayers`)
@@ -39,7 +41,6 @@ export default function Admin() {
       body: JSON.stringify({ action: "shuffle", game_id: gameId })
     }).then(() => {
       alert("Teams shuffled");
-      // Refresh team compositions after shuffling
       fetch(`${API_URL}?action=getTeamCompositions&game_id=${gameId}`)
         .then(res => res.json())
         .then(setTeamCompositions);
@@ -61,9 +62,10 @@ export default function Admin() {
       body: JSON.stringify({
         action: "update_level",
         player_id: playerId,
-        level: level
+        level: level,
+        is_passer: isPasser
       })
-    }).then(() => alert("Level updated"));
+    }).then(() => alert("Player updated"));
   };
 
   const handlePayment = () => {
@@ -92,6 +94,25 @@ export default function Admin() {
     }).then(() => alert("Score submitted"));
   };
 
+  const handleMovePlayer = (player, fromTeamId, toTeamId) => {
+    fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "move_player",
+        player_id: player,
+        from_team_id: fromTeamId,
+        to_team_id: toTeamId,
+        game_id: gameId
+      })
+    }).then(() => {
+      alert("Player moved");
+      fetch(`${API_URL}?action=getTeamCompositions&game_id=${gameId}`)
+        .then(res => res.json())
+        .then(setTeamCompositions);
+    });
+  };
+
   return (
     <div className="p-4 max-w-xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
@@ -108,11 +129,7 @@ export default function Admin() {
 
       <hr className="my-6" />
 
-      <select
-        value={playerId}
-        onChange={e => setPlayerId(e.target.value)}
-        className="mb-2 w-full border p-2"
-      >
+      <select value={playerId} onChange={e => setPlayerId(e.target.value)} className="mb-2 w-full border p-2">
         <option value="">Select Player</option>
         {players.map(p => (
           <option key={p.player_id} value={p.player_id}>{p.name}</option>
@@ -122,11 +139,20 @@ export default function Admin() {
       <input
         value={level}
         onChange={e => setLevel(e.target.value)}
-        className="mb-4 w-full border p-2"
+        className="mb-2 w-full border p-2"
         placeholder="New Level (1–4)"
       />
 
-      <button onClick={handleLevelUpdate} className="bg-blue-600 text-white px-4 py-2 rounded">Update Level</button>
+      <label className="flex items-center space-x-2 mb-4">
+        <input
+          type="checkbox"
+          checked={isPasser}
+          onChange={e => setIsPasser(e.target.checked)}
+        />
+        <span>Set as dedicated passer</span>
+      </label>
+
+      <button onClick={handleLevelUpdate} className="bg-blue-600 text-white px-4 py-2 rounded">Update Player</button>
 
       <hr className="my-6" />
 
@@ -141,11 +167,7 @@ export default function Admin() {
 
       <hr className="my-6" />
 
-      <select
-        value={teamId}
-        onChange={e => setTeamId(e.target.value)}
-        className="mb-2 w-full border p-2"
-      >
+      <select value={teamId} onChange={e => setTeamId(e.target.value)} className="mb-2 w-full border p-2">
         <option value="">Select Team</option>
         {teams.map(t => (
           <option key={t.team_id} value={t.team_id}>{t.team_name}</option>
@@ -169,9 +191,31 @@ export default function Admin() {
           <p className="font-bold">{team.team_name}</p>
           <ul className="list-disc ml-4">
             {team.members.map((member, idx) => (
-              <li key={idx}>{member}</li>
+              <li key={idx} className="flex justify-between items-center">
+                <span>{member}</span>
+                {editingTeam === team.team_name && (
+                  <select
+                    className="ml-2 border"
+                    onChange={e => handleMovePlayer(member, team.team_id, e.target.value)}
+                    defaultValue=""
+                  >
+                    <option value="">Move to...</option>
+                    {teamCompositions
+                      .filter(t => t.team_name !== team.team_name)
+                      .map(t => (
+                        <option key={t.team_name} value={t.team_id}>{t.team_name}</option>
+                      ))}
+                  </select>
+                )}
+              </li>
             ))}
           </ul>
+          <button
+            className="mt-2 text-sm text-blue-600 underline"
+            onClick={() => setEditingTeam(editingTeam === team.team_name ? null : team.team_name)}
+          >
+            {editingTeam === team.team_name ? "Cancel Edit" : "Edit Team"}
+          </button>
         </div>
       ))}
     </div>
