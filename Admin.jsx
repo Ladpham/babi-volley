@@ -12,6 +12,7 @@ export default function Admin() {
   const [score, setScore] = useState("");
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [teamCompositions, setTeamCompositions] = useState([]);
 
   useEffect(() => {
     fetch(`${API_URL}?action=getPlayers`)
@@ -23,12 +24,26 @@ export default function Admin() {
       .then(setTeams);
   }, []);
 
+  useEffect(() => {
+    if (gameId) {
+      fetch(`${API_URL}?action=getTeamCompositions&game_id=${gameId}`)
+        .then(res => res.json())
+        .then(setTeamCompositions);
+    }
+  }, [gameId]);
+
   const handleShuffle = () => {
     fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "shuffle", game_id: gameId })
-    }).then(() => alert("Teams shuffled"));
+    }).then(() => {
+      alert("Teams shuffled");
+      // Refresh team compositions after shuffling
+      fetch(`${API_URL}?action=getTeamCompositions&game_id=${gameId}`)
+        .then(res => res.json())
+        .then(setTeamCompositions);
+    });
   };
 
   const handleFinalize = () => {
@@ -145,6 +160,20 @@ export default function Admin() {
       />
 
       <button onClick={handleScoreSubmit} className="bg-red-600 text-white px-4 py-2 rounded">Submit Score</button>
+
+      <hr className="my-6" />
+
+      <h3 className="text-lg font-semibold mb-2">Team Compositions</h3>
+      {teamCompositions.map((team, index) => (
+        <div key={index} className="mb-4 p-3 border rounded bg-white">
+          <p className="font-bold">{team.team_name}</p>
+          <ul className="list-disc ml-4">
+            {team.members.map((member, idx) => (
+              <li key={idx}>{member}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
