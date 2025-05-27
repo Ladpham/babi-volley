@@ -38,7 +38,8 @@ export default function App() {
   return (
     <div className="bg-gray-100 text-gray-900 min-h-screen relative">
       <header className="absolute top-4 right-4">
-        <img src="/babi-volley/logo.png" alt="Logo" className="h-12 w-12 rounded-full shadow-md" />
+        <img src="/babi-volley/logo.png" alt="Logo" />
+        <link rel="icon" href="/babi-volley/logo.png" />
       </header>
 
       <main className="max-w-3xl mx-auto p-6">
