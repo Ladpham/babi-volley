@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/babi-volley/' // adapt if your repo name changes
+  base: '/babi-volley/' // adjust to your repo name
 })
