@@ -29,7 +29,10 @@ export default function App() {
       })
     })
     .then(() => alert("Registered!"))
-    .catch(() => alert("Failed to register"));
+    .catch(err => {
+      console.error(err);
+      alert("Failed to register. See console for details.");
+});
   };
 
   return (
