@@ -5,5 +5,5 @@
   "deploy": "gh-pages -d dist"
 }
 
-npm install react-router-dom
+
 
